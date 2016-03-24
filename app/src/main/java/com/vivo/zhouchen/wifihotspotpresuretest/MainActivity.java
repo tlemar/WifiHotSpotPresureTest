@@ -5,17 +5,23 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.os.Environment;
+
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.vivo.zhouchen.wifihotspotpresuretest.UIComponent.StateFAB;
+
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
     StateFAB stateFAB;
@@ -25,12 +31,37 @@ public class MainActivity extends AppCompatActivity {
     int mTimes = 0;
     HotSpotReceiver hotSpotReceiver;
 
+    Button mSubmitStopTimes;
+
+    EditText mStopTimes;
+    Handler mHander;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        mSubmitStopTimes = (Button) findViewById(R.id.submitStopTime);
+        mStopTimes = (EditText) findViewById(R.id.stopTimes);
+
+
+        mHander = new Handler(getMainLooper());
+        mSubmitStopTimes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    int delaytime  = Integer.parseInt(mStopTimes.getText().toString());
+                    hotSpotPresureTest.mDelayTimes = delaytime;
+                    Toast.makeText(getApplicationContext(), "成功设置延迟等待时间为"+ delaytime, Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Log.e(tag, "exception is " + e);
+                    Toast.makeText(getApplicationContext(), "请输入一个正整数", Toast.LENGTH_SHORT).show();
+
+                }
+            }
+        });
 
         stateFAB = (StateFAB) findViewById(R.id.fab);
         stateFAB.setOnClickListener(new View.OnClickListener() {
@@ -47,7 +78,19 @@ public class MainActivity extends AppCompatActivity {
 
         mHint = (TextView) findViewById(R.id.textview_softap_times);
         hotSpotReceiver = new HotSpotReceiver();
-        mHint.setText("压力测试次数："+0);
+        mHint.setText("压力测试次数：" + 0);
+
+
+
+        String sdcard  = Environment.getExternalStorageDirectory().toString();
+        File sd = Environment.getExternalStorageDirectory();
+
+        Log.e(tag, "sd.canWrite() is " + sd.canWrite());
+
+        Log.e(tag, "sdcard file is " + sdcard);
+        File file = new File(sd + "/tetherDebug.file");
+        Log.e(tag ,"file exist() " + file.exists());
+
     }
 
     private void stopTask() {
@@ -55,7 +98,16 @@ public class MainActivity extends AppCompatActivity {
         stateFAB.setActionState(true);
         getApplicationContext().unregisterReceiver(hotSpotReceiver);
         hotSpotPresureTest.stopTestForcely();
+
+        new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        };
     }
+
+
 
     private void startTask() {
         mHint.setText("压力测试次数："+0);

@@ -17,4 +17,18 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello World!" />
+
+
+    <EditText
+        android:layout_below="@+id/textview_softap_times"
+        android:id="@+id/stopTimes"
+        android:inputType="numberDecimal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <Button
+        android:layout_below="@+id/stopTimes"
+        android:id="@+id/submitStopTime"
+        android:text="输入延迟关闭时间"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 </RelativeLayout>

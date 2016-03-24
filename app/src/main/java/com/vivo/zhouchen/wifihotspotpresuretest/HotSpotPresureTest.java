@@ -7,8 +7,14 @@ import android.content.IntentFilter;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.CountDownTimer;
+import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 
+import org.w3c.dom.ls.LSException;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Queue;
 
@@ -25,17 +31,18 @@ public class HotSpotPresureTest implements ITestPlaner {
     private String tag = "HotSpotPresure";
     Context mContext;
 
+    static public int mDelayTimes= 0;
     Object hotspotLock = new Object();
     private boolean isForceStop = false;
 
+    private Handler mHandler ;
     HotSpotPresureTest(Context context) {
-
         mContext = context;
         mWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         mNetUtils = new NetUtils(context);
         mTestParas = TestParas.createTestParasFromFile();
         mWifiConfig = mNetUtils.setWifiCofig("wifiTest", "12345678", 1);
-
+        mHandler = new Handler(mContext.getMainLooper());
     }
 
     @Override
@@ -57,7 +64,6 @@ public class HotSpotPresureTest implements ITestPlaner {
         intentFilter.addAction("android.net.wifi.WIFI_AP_STATE_CHANGED");
         mContext.registerReceiver(hotSpotReceiver, intentFilter);
         while (mTimes < mTestParas.Times) {
-//            Log.e(tag, "wifi config is " + mWifiConfig.toString());
 
             if (isForceStop) {
                 mContext.unregisterReceiver(hotSpotReceiver);
@@ -127,17 +133,23 @@ public class HotSpotPresureTest implements ITestPlaner {
                 //int preWifiApState = intent.getIntExtra("previous_wifi_state", -1);
                 if (wifiApStat == 13 /* && preWifiApState != 13*/ ) {
 
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+//                    try {
+//                        Thread.sleep(mDelayTimes*1000);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
                     synchronized (hotspotLock) {
                         hotspotLock.notifyAll();
                     }
 
-                    mNetUtils.closeSoftAp(mNetUtils.setWifiCofig("wifiTest", "12345678",1));
-                    mTimes++;
+                    mHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            mNetUtils.closeSoftAp(mNetUtils.setWifiCofig("wifiTest", "12345678",1));
+                            mTimes++;
+                        }
+                    }, mDelayTimes*1000);
+
 
                 }
                 //hotspotTimer.cancel();
